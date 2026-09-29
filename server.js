@@ -18,8 +18,9 @@ function esc(s) {
 function transport() {
   return nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
+    port: 587,
+    secure: false,
+    requireTLS: true,
     auth: { user: USER, pass: PASS },
     connectionTimeout: 10000,
     greetingTimeout: 10000,
@@ -37,7 +38,7 @@ async function sendMail(subject, html, replyTo) {
   });
 }
 
-// ── Diagnostics: open  https://YOUR-URL/api/health  in a browser ──
+// Diagnostics: open  https://YOUR-URL/api/health  in a browser
 app.get('/api/health', async (req, res) => {
   const config = {
     GMAIL_USER: USER ? 'set (' + USER + ')' : 'MISSING',
@@ -57,11 +58,8 @@ app.post('/api/lead', (req, res) => {
   if (!name || !business || !email || !phone) {
     return res.status(400).json({ ok: false, error: 'Missing fields' });
   }
-  // Log first — this is a backup in Railway logs even if email fails
   console.log('LEAD:', JSON.stringify({ name, business, email, phone, at: new Date().toISOString() }));
-  // Respond immediately so the page never hangs
   res.json({ ok: true });
-  // Send the email in the background
   const html = `
     <h2 style="font-family:sans-serif">New KapMarkets lead</h2>
     <p style="font-family:sans-serif"><b>Name:</b> ${esc(name)}</p>
